@@ -1,0 +1,19 @@
+{
+  "name": "fluxer-bot",
+  "version": "1.0.0",
+  "description": "All-Purpose Fluxer Bot (ported from Inasha)",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "author": "Lucky",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@fluxerjs/core": "latest"
+  }
+}
