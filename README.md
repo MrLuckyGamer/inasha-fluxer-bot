@@ -80,7 +80,6 @@ The bot responds automatically to messages containing:
 ## Data Storage
 
 All persistent data is stored as JSON files in `./data/`:
-- `data/casino/` — money, roulette stats, slots stats
 - `data/fish/` — fishing scores and cooldowns
 - `data/familytree/` — family relationships
 - `data/serverstats/` — stat channel IDs
