@@ -1,9 +1,13 @@
-import { Client, Events, EmbedBuilder } from '@fluxerjs/core';
+import { Client, Events } from '@fluxerjs/core';
 import { pathToFileURL } from 'url';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { initDb } from './db.js';
+
+// === Keep the process alive on unhandled errors ===
+process.on('unhandledRejection', (err) => console.error('[unhandledRejection]', err));
+process.on('uncaughtException',  (err) => console.error('[uncaughtException]', err));
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -11,6 +15,11 @@ const config = {
   token:  process.env.FLUXER_BOT_TOKEN,
   prefix: process.env.PREFIX || 'i>',
 };
+
+if (!config.token) {
+  console.error('[bot] FATAL: FLUXER_BOT_TOKEN env var is not set.');
+  process.exit(1);
+}
 
 // Initialise PostgreSQL tables before starting the bot
 await initDb();
@@ -29,10 +38,15 @@ async function loadCommands(dir) {
     if (stat.isDirectory()) {
       await loadCommands(filePath);
     } else if (file.endsWith('.js')) {
-      const mod = await import(pathToFileURL(filePath).href);
-      const command = mod.default ?? mod;
-      if (command?.name) {
-        client.commands.set(command.name, command);
+      try {
+        const mod = await import(pathToFileURL(filePath).href);
+        const command = mod.default ?? mod;
+        if (command?.name) {
+          client.commands.set(command.name, command);
+          console.log(`[cmd] Loaded: ${command.name}`);
+        }
+      } catch (err) {
+        console.error(`[cmd] Failed to load ${file}:`, err.message);
       }
     }
   }
@@ -40,7 +54,7 @@ async function loadCommands(dir) {
 
 const commandsPath = path.join(__dirname, 'commands');
 await loadCommands(commandsPath);
-
+console.log(`[bot] Loaded ${client.commands.size} commands.`);
 
 // === Guild member join/leave for serverstats ===
 client.on(Events.GuildMemberAdd, async (member) => {
@@ -64,7 +78,6 @@ client.on(Events.MessageCreate, async (message) => {
   const lower  = (message.content ?? '').toLowerCase();
   const prefix = config.prefix.toLowerCase();
 
-  // === Prefix Commands ===
   if (lower.startsWith(prefix)) {
     const args        = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift().toLowerCase();
@@ -73,8 +86,8 @@ client.on(Events.MessageCreate, async (message) => {
       try {
         await command.execute(message, args, client);
       } catch (error) {
-        console.error(error);
-        await message.reply('There was an error executing that command.');
+        console.error(`[cmd] Error in ${commandName}:`, error);
+        await message.reply('There was an error executing that command.').catch(() => {});
       }
     }
     return;
@@ -101,4 +114,6 @@ client.on(Events.MessageCreate, async (message) => {
 });
 
 // === Login ===
+console.log('[bot] Logging in...');
 await client.login(config.token);
+console.log('[bot] Ready.');
