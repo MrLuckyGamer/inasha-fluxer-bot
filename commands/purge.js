@@ -19,7 +19,7 @@ export default {
 
     try {
       // Fetch recent messages then bulk delete
-      const msgs = await channel.messages.fetch({ limit: amount + 1 });
+      const msgs = await channel.messages.fetch(amount + 1);
       const ids = [...msgs.values()].map(m => m.id).slice(0, amount);
       await channel.bulkDeleteMessages(ids);
 
