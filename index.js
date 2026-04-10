@@ -16,9 +16,22 @@ const client = new Client({ intents: 0, suppressIntentWarning: true, waitForGuil
 // === Command Collection ===
 client.commands = new Map();
 
-// === Ready ===
+// === READY EVENT ===
 client.on(Events.ClientReady, () => {
-  console.log(`Bot is online! Logged in as ${client.user?.username}`);
+  console.log(`✅ Bot is online! Logged in as ${client.user?.username}`);
+});
+
+// === EXTRA DEBUG EVENTS ===
+client.on('debug', (msg) => {
+  console.log('🐛 DEBUG:', msg);
+});
+
+client.on('error', (err) => {
+  console.error('❌ CLIENT ERROR:', err);
+});
+
+client.on('warn', (msg) => {
+  console.warn('⚠️ WARN:', msg);
 });
 
 // === Load Commands ===
@@ -38,12 +51,12 @@ async function loadCommands(dir) {
 
         if (command?.name) {
           client.commands.set(command.name, command);
-          console.log(`Loaded command: ${command.name}`);
+          console.log(`📦 Loaded command: ${command.name}`);
         } else {
-          console.log(`Skipped file (no command): ${file}`);
+          console.log(`⚠️ Skipped file (no command): ${file}`);
         }
       } catch (err) {
-        console.error(`Failed to load command file: ${file}`);
+        console.error(`❌ Failed to load command file: ${file}`);
         console.error(err);
       }
     }
@@ -52,7 +65,6 @@ async function loadCommands(dir) {
 
 const commandsPath = path.join(__dirname, 'commands');
 await loadCommands(commandsPath);
-
 
 // === Guild member join/leave for serverstats ===
 client.on(Events.GuildMemberAdd, async (member) => {
@@ -87,7 +99,7 @@ client.on(Events.MessageCreate, async (message) => {
         console.log(`⚡ Executing command: ${commandName}`);
         await command.execute(message, args, client);
       } catch (error) {
-        console.error(`Error executing command: ${commandName}`);
+        console.error(`❌ Error executing command: ${commandName}`);
         console.error(error);
         await message.reply('There was an error executing that command.');
       }
@@ -115,17 +127,32 @@ client.on(Events.MessageCreate, async (message) => {
   }
 });
 
-
-// === Global Error Logging ===
+// === GLOBAL ERROR LOGGING ===
 process.on('unhandledRejection', (err) => {
-  console.error('Unhandled promise rejection:', err);
+  console.error('❌ Unhandled promise rejection:', err);
 });
 
 process.on('uncaughtException', (err) => {
-  console.error('Uncaught exception:', err);
+  console.error('🔥 Uncaught exception:', err);
 });
 
+// === LOGIN DEBUG ===
+console.log('🔐 Attempting to log in...');
+console.log('Token present:', !!config.token);
 
-// === Login ===
-console.log('Attempting to log in...');
-await client.login(config.token);
+try {
+  const result = await client.login(config.token);
+  console.log('📡 Login returned:', result);
+  console.log('Client user after login:', client.user);
+} catch (err) {
+  console.error('❌ Login failed hard:', err);
+}
+
+// === FALLBACK STATUS CHECK ===
+setInterval(() => {
+  if (client.user) {
+    console.log(`🟢 Still alive as ${client.user.username}`);
+  } else {
+    console.log('🟡 Client not ready yet...');
+  }
+}, 5000);
