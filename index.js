@@ -11,7 +11,7 @@ const config = {
   prefix: process.env.prefix || 'i>',
 };
 
-const client = new Client({ intents: 0, suppressIntentWarning: true });
+const client = new Client({ intents: 0, suppressIntentWarning: true, waitForGuilds: true });
 
 // === Command Collection ===
 client.commands = new Map();
@@ -106,11 +106,10 @@ client.on(Events.MessageCreate, async (message) => {
 });
 
 // === Guild join/leave logging ===
-client.on(Events.GuildCreate, async (guild) => {
-  const fetched = await client.guilds.fetch(guild.id).catch(() => guild);
+client.on(Events.GuildCreate, (guild) => {
   console.log('====================================');
-  console.log(`Added to: ${fetched.name} (ID: ${fetched.id})`);
-  console.log(`Members: ${fetched.memberCount ?? 'unknown'}`);
+  console.log(`Added to: ${guild.name} (ID: ${guild.id})`);
+  console.log(`Members: ${guild.memberCount ?? 'unknown'}`);
   console.log(`Total Servers: ${client.guilds.size}`);
   console.log('====================================');
 });
