@@ -100,14 +100,5 @@ client.on(Events.MessageCreate, async (message) => {
   }
 });
 
-
-// === Keep the process alive on unhandled errors ===
-process.on('unhandledRejection', (err) => {
-  console.error('[unhandledRejection]', err);
-});
-process.on('uncaughtException', (err) => {
-  console.error('[uncaughtException]', err);
-});
-
 // === Login ===
 await client.login(config.token);
