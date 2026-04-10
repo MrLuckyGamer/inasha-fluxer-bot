@@ -16,8 +16,8 @@ const client = new Client({ intents: 0, suppressIntentWarning: true, waitForGuil
 // === Command Collection ===
 client.commands = new Map();
 
-// === READY EVENT ===
-client.on(Events.ClientReady, () => {
+// ✅ FIXED READY EVENT (works with Fluxer)
+client.on('ready', () => {
   console.log(`✅ Bot is online! Logged in as ${client.user?.username}`);
 });
 
@@ -66,7 +66,7 @@ async function loadCommands(dir) {
 const commandsPath = path.join(__dirname, 'commands');
 await loadCommands(commandsPath);
 
-// === Guild member join/leave for serverstats ===
+// === Guild member join/leave ===
 client.on(Events.GuildMemberAdd, async (member) => {
   try {
     const { updateStats } = await import('./commands/serverstats.js');
@@ -88,7 +88,6 @@ client.on(Events.MessageCreate, async (message) => {
   const lower = (message.content ?? '').toLowerCase();
   const prefix = config.prefix.toLowerCase();
 
-  // === Prefix Commands ===
   if (lower.startsWith(prefix)) {
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift().toLowerCase();
@@ -107,21 +106,19 @@ client.on(Events.MessageCreate, async (message) => {
     return;
   }
 
-  // === Fun Cat Responses ===
   if (lower.includes('meow')) {
     const responses = [
-      'Meow! 🐱', '😺 Meow meow!', 'Mew~', 'Purr~ 😻', 'Nya~ ✨',
-      '*eepy meow...* 💤', 'MEOW!!', '🐾 *pounces on you* meow!',
+      'Meow! 🐱','😺 Meow meow!','Mew~','Purr~ 😻','Nya~ ✨',
+      '*eepy meow...* 💤','MEOW!!','🐾 *pounces on you* meow!',
     ];
     return message.reply(responses[Math.floor(Math.random() * responses.length)]);
   }
 
-  // === Dog Responses ===
-  const dogWords = ['woof', 'bark', 'bork', 'ruff', 'arf'];
+  const dogWords = ['woof','bark','bork','ruff','arf'];
   if (dogWords.some(word => lower.includes(word))) {
     const responses = [
-      'Woof! 🐶', 'Bark bark! 🐾', 'bork bork!', 'Ruff~ 🐕',
-      '*wags tail excitedly*', '🐶 *gives you a slobbery kiss*',
+      'Woof! 🐶','Bark bark! 🐾','bork bork!','Ruff~ 🐕',
+      '*wags tail excitedly*','🐶 *gives you a slobbery kiss*',
     ];
     return message.reply(responses[Math.floor(Math.random() * responses.length)]);
   }
@@ -136,23 +133,13 @@ process.on('uncaughtException', (err) => {
   console.error('🔥 Uncaught exception:', err);
 });
 
-// === LOGIN DEBUG ===
+// === LOGIN ===
 console.log('🔐 Attempting to log in...');
 console.log('Token present:', !!config.token);
 
 try {
-  const result = await client.login(config.token);
-  console.log('📡 Login returned:', result);
-  console.log('Client user after login:', client.user);
+  await client.login(config.token);
+  console.log('📡 Login request sent');
 } catch (err) {
   console.error('❌ Login failed hard:', err);
 }
-
-// === FALLBACK STATUS CHECK ===
-setInterval(() => {
-  if (client.user) {
-    console.log(`🟢 Still alive as ${client.user.username}`);
-  } else {
-    console.log('🟡 Client not ready yet...');
-  }
-}, 5000);
