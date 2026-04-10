@@ -1,5 +1,4 @@
 import { PermissionFlags } from '@fluxerjs/core';
-import { Routes } from '@fluxerjs/types';
 
 export default {
   name: 'purge',
@@ -19,18 +18,37 @@ export default {
     if (!channel) return;
 
     try {
-      // Fetch recent messages via REST (limit includes the command message itself)
-      const data = await client.rest.get(
-        `${Routes.channelMessages(message.channelId)}?limit=${amount + 1}`
-      );
-      const ids = data.map(m => m.id).slice(0, amount);
-      await channel.bulkDeleteMessages(ids);
+      // Fetch recent messages — amount+1 so we can include the command message itself
+      const messages = await channel.messages.fetch({ limit: amount + 1 });
+      const msgArray = Array.isArray(messages) ? messages : [...messages.values()];
+      const toDelete = msgArray.slice(0, amount + 1);
+      const ids = toDelete.map(m => m.id);
 
-      const notice = await channel.send({ content: `Deleted **${ids.length}** messages.` });
+      let deleted = 0;
+
+      // Try bulk delete first (requires messages < 14 days old)
+      if (channel.bulkDeleteMessages) {
+        try {
+          await channel.bulkDeleteMessages(ids);
+          deleted = ids.length;
+        } catch {
+          // Bulk failed (e.g. messages too old) — fall through to individual deletes
+        }
+      }
+
+      // Fall back to deleting one by one
+      if (deleted === 0) {
+        for (const msg of toDelete) {
+          await msg.delete().catch(() => {});
+          deleted++;
+        }
+      }
+
+      const notice = await channel.send({ content: `Deleted **${deleted}** messages.` });
       setTimeout(() => notice.delete?.().catch(() => {}), 3000);
     } catch (err) {
       console.error(err);
-      await message.reply('Could not delete messages.');
+      await message.reply('Could not delete messages.').catch(() => {});
     }
   },
 };
