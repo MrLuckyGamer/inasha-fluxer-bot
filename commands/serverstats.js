@@ -19,18 +19,21 @@ export async function updateStats(guild, client) {
   if (!cfg) return;
 
   try {
-    const memberCount = guild.memberCount ?? 0;
+    // Fetch all members so we get an accurate count (guild.memberCount is null on Fluxer)
+    const members = await guild.members.fetch({ limit: 1000 }).catch(() => [...guild.members.values()]);
+    const allMembers = members.length > 0 ? members : [...guild.members.values()];
 
-    // Try to count bots from cached members; skip heavy fetch if not needed
-    const cachedBots  = [...(guild.members?.values?.() ?? [])].filter(m => m.user?.bot).length;
-    const bots        = cachedBots;
-    const users       = Math.max(0, memberCount - bots);
-    const channels    = [...(client?.channels?.values?.() ?? [])]
-      .filter(c => c.guildId === guild.id).length;
+    const bots  = allMembers.filter(m => m.user?.bot).length;
+    const users = Math.max(0, allMembers.length - bots);
 
+    // Fetch channels so guild.channels is populated
+    await guild.fetchChannels().catch(() => {});
+    const channels = guild.channels.size;
+
+    // Rename stat channels using .edit({ name }) — Fluxer has no .setName()
     const rename = async (id, name) => {
-      const ch = client?.channels?.get?.(id);
-      if (ch?.setName) await ch.setName(name).catch(() => {});
+      const ch = guild.channels.get(id) ?? client?.channels?.get?.(id);
+      if (ch?.edit) await ch.edit({ name }).catch(() => {});
     };
 
     await rename(cfg.users,    `👥 Users: ${users}`);
