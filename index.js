@@ -16,22 +16,9 @@ const client = new Client({ intents: 0, suppressIntentWarning: true, waitForGuil
 // === Command Collection ===
 client.commands = new Map();
 
-// ✅ FIXED READY EVENT (works with Fluxer)
+// Ready Event
 client.on('ready', () => {
   console.log(`✅ Bot is online! Logged in as ${client.user?.username}`);
-});
-
-// === EXTRA DEBUG EVENTS ===
-client.on('debug', (msg) => {
-  console.log('🐛 DEBUG:', msg);
-});
-
-client.on('error', (err) => {
-  console.error('❌ CLIENT ERROR:', err);
-});
-
-client.on('warn', (msg) => {
-  console.warn('⚠️ WARN:', msg);
 });
 
 // === Load Commands ===
@@ -95,7 +82,7 @@ client.on(Events.MessageCreate, async (message) => {
 
     if (command) {
       try {
-        console.log(`⚡ Executing command: ${commandName}`);
+        console.log(`⚡ ${message.author.username} ran: ${commandName}`);
         await command.execute(message, args, client);
       } catch (error) {
         console.error(`❌ Error executing command: ${commandName}`);
@@ -124,7 +111,7 @@ client.on(Events.MessageCreate, async (message) => {
   }
 });
 
-// === GLOBAL ERROR LOGGING ===
+// === Global Error Logging ===
 process.on('unhandledRejection', (err) => {
   console.error('❌ Unhandled promise rejection:', err);
 });
@@ -133,13 +120,6 @@ process.on('uncaughtException', (err) => {
   console.error('🔥 Uncaught exception:', err);
 });
 
-// === LOGIN ===
+// === Login ===
 console.log('🔐 Attempting to log in...');
-console.log('Token present:', !!config.token);
-
-try {
-  await client.login(config.token);
-  console.log('📡 Login request sent');
-} catch (err) {
-  console.error('❌ Login failed hard:', err);
-}
+await client.login(config.token);
