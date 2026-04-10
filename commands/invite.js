@@ -5,7 +5,7 @@ export default {
   description: "Get the bot's invite link.",
   category: 'Utility',
   async execute(message, args, client) {
-    const inviteUrl = 'https://fluxer.app'; // Update with your bot's actual invite URL
+    const inviteUrl = 'https://web.fluxer.app/oauth2/authorize?client_id=1492077171327562990&scope=bot&permissions=8';
 
     const embed = new EmbedBuilder()
       .setTitle('Invite Me')
