@@ -1,7 +1,24 @@
 import { EmbedBuilder } from '@fluxerjs/core';
-import { pool } from '../db.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const COOLDOWN = 60 * 60 * 1000; // 1 hour in ms
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const fishFile     = path.join(__dirname, '../data/fish/fish.json');
+const cooldownFile = path.join(__dirname, '../data/fish/fishCooldowns.json');
+
+function ensureDir(f) {
+  const d = path.dirname(f);
+  if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
+  if (!fs.existsSync(f)) fs.writeFileSync(f, '{}');
+}
+ensureDir(fishFile);
+ensureDir(cooldownFile);
+
+let fishData  = JSON.parse(fs.readFileSync(fishFile));
+let cooldowns = JSON.parse(fs.readFileSync(cooldownFile));
+
+const COOLDOWN = 60 * 60 * 1000; // 1 hour
 
 const fishes = [
   { name: '🐟 Common Fish',   min: 1,  max: 20,  weight: 50 },
@@ -30,12 +47,8 @@ export default {
     const userId  = message.author.id;
     const now     = Date.now();
 
-    // Check cooldown
-    const { rows: cdRows } = await pool.query(
-      'SELECT last_fished FROM fish_cooldowns WHERE guild_id=$1 AND user_id=$2',
-      [guildId, userId]
-    );
-    const lastFish = cdRows[0]?.last_fished ?? 0;
+    if (!cooldowns[guildId]) cooldowns[guildId] = {};
+    const lastFish = cooldowns[guildId][userId] || 0;
 
     if (now - lastFish < COOLDOWN) {
       const rem = COOLDOWN - (now - lastFish);
@@ -48,30 +61,18 @@ export default {
     const caught = getRandomFish();
     const points = Math.floor(Math.random() * (caught.max - caught.min + 1)) + caught.min;
 
-    // Upsert score
-    const { rows: scoreRows } = await pool.query(
-      `INSERT INTO fish_scores (guild_id, user_id, score)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (guild_id, user_id)
-       DO UPDATE SET score = fish_scores.score + $3
-       RETURNING score`,
-      [guildId, userId, points]
-    );
-    const totalScore = scoreRows[0].score;
+    if (!fishData[guildId]) fishData[guildId] = {};
+    if (!fishData[guildId][userId]) fishData[guildId][userId] = 0;
+    fishData[guildId][userId] += points;
+    fs.writeFileSync(fishFile, JSON.stringify(fishData, null, 2));
 
-    // Upsert cooldown
-    await pool.query(
-      `INSERT INTO fish_cooldowns (guild_id, user_id, last_fished)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (guild_id, user_id)
-       DO UPDATE SET last_fished = $3`,
-      [guildId, userId, now]
-    );
+    cooldowns[guildId][userId] = now;
+    fs.writeFileSync(cooldownFile, JSON.stringify(cooldowns, null, 2));
 
     const embed = new EmbedBuilder()
       .setTitle(`${message.author.username} went fishing! 🎣`)
       .setDescription(
-        `You caught a **${caught.name}**!\nCoins Earned: **${points}**\nTotal Coins Earned: **${totalScore}**`
+        `You caught a **${caught.name}**!\nCoins Earned: **${points}**\nTotal Coins Earned: **${fishData[guildId][userId]}**`
       )
       .setColor(6086089)
       .setTimestamp(new Date());

@@ -1,4 +1,5 @@
-import { PermissionFlags, Routes } from '@fluxerjs/core';
+import { PermissionFlags } from '@fluxerjs/core';
+import { Routes } from '@fluxerjs/types';
 
 export default {
   name: 'purge',
@@ -14,50 +15,22 @@ export default {
     if (isNaN(amount) || amount <= 0 || amount > 100)
       return message.reply('Please enter a number between **1 and 100**.');
 
-    const channelId = message.channelId;
-    const channel   = client.channels.get(channelId);
+    const channel = client.channels.get(message.channelId);
     if (!channel) return;
 
     try {
-      // Fetch message list via REST — MessageManager.fetch(id) only looks up single IDs,
-      // there is no list fetch in the SDK, so we call the route directly.
-      const fetched = await client.rest.get(
-        `${Routes.channelMessages(channelId)}?limit=${Math.min(amount + 1, 100)}`,
-        { auth: true }
+      // Fetch recent messages via REST (limit includes the command message itself)
+      const data = await client.rest.get(
+        `${Routes.channelMessages(message.channelId)}?limit=${amount + 1}`
       );
+      const ids = data.map(m => m.id).slice(0, amount);
+      await channel.bulkDeleteMessages(ids);
 
-      const ids = (Array.isArray(fetched) ? fetched : []).map(m => m.id);
-
-      if (ids.length === 0)
-        return message.reply('No messages found to delete.');
-
-      // bulkDeleteMessages needs 2–100 IDs and messages < 14 days old
-      if (ids.length >= 2) {
-        try {
-          await channel.bulkDeleteMessages(ids);
-          const notice = await channel.send({ content: `Deleted **${ids.length}** messages.` });
-          setTimeout(() => notice?.delete?.().catch(() => {}), 3000);
-          return;
-        } catch {
-          // Bulk failed (e.g. old messages) — fall through to individual deletes
-        }
-      }
-
-      // Individual delete fallback
-      let deleted = 0;
-      for (const id of ids) {
-        await client.rest.delete(
-          `${Routes.channelMessages(channelId)}/${id}`,
-          { auth: true }
-        ).catch(() => {});
-        deleted++;
-      }
-
-      const notice = await channel.send({ content: `Deleted **${deleted}** messages.` });
-      setTimeout(() => notice?.delete?.().catch(() => {}), 3000);
+      const notice = await channel.send({ content: `Deleted **${ids.length}** messages.` });
+      setTimeout(() => notice.delete?.().catch(() => {}), 3000);
     } catch (err) {
-      console.error('[purge]', err);
-      await message.reply('Could not delete messages.').catch(() => {});
+      console.error(err);
+      await message.reply('Could not delete messages.');
     }
   },
 };

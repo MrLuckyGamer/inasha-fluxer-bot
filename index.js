@@ -1,28 +1,15 @@
-import { Client, Events } from '@fluxerjs/core';
+import { Client, Events, EmbedBuilder } from '@fluxerjs/core';
 import { pathToFileURL } from 'url';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { initDb } from './db.js';
-
-// === Keep the process alive on unhandled errors ===
-process.on('unhandledRejection', (err) => console.error('[unhandledRejection]', err));
-process.on('uncaughtException',  (err) => console.error('[uncaughtException]', err));
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const config = {
-  token:  process.env.FLUXER_BOT_TOKEN,
-  prefix: process.env.PREFIX || 'i>',
+  token: process.env.FLUXER_BOT_TOKEN,
+  prefix: process.env.prefix || 'i>',
 };
-
-if (!config.token) {
-  console.error('[bot] FATAL: FLUXER_BOT_TOKEN env var is not set.');
-  process.exit(1);
-}
-
-// Initialise PostgreSQL tables before starting the bot
-await initDb();
 
 const client = new Client({ intents: 0, suppressIntentWarning: true, waitForGuilds: true });
 
@@ -38,15 +25,10 @@ async function loadCommands(dir) {
     if (stat.isDirectory()) {
       await loadCommands(filePath);
     } else if (file.endsWith('.js')) {
-      try {
-        const mod = await import(pathToFileURL(filePath).href);
-        const command = mod.default ?? mod;
-        if (command?.name) {
-          client.commands.set(command.name, command);
-          console.log(`[cmd] Loaded: ${command.name}`);
-        }
-      } catch (err) {
-        console.error(`[cmd] Failed to load ${file}:`, err.message);
+      const mod = await import(pathToFileURL(filePath).href);
+      const command = mod.default ?? mod;
+      if (command?.name) {
+        client.commands.set(command.name, command);
       }
     }
   }
@@ -54,7 +36,7 @@ async function loadCommands(dir) {
 
 const commandsPath = path.join(__dirname, 'commands');
 await loadCommands(commandsPath);
-console.log(`[bot] Loaded ${client.commands.size} commands.`);
+
 
 // === Guild member join/leave for serverstats ===
 client.on(Events.GuildMemberAdd, async (member) => {
@@ -75,19 +57,20 @@ client.on(Events.GuildMemberRemove, async (member) => {
 client.on(Events.MessageCreate, async (message) => {
   if (message.author?.bot) return;
 
-  const lower  = (message.content ?? '').toLowerCase();
+  const lower = (message.content ?? '').toLowerCase();
   const prefix = config.prefix.toLowerCase();
 
+  // === Prefix Commands ===
   if (lower.startsWith(prefix)) {
-    const args        = message.content.slice(prefix.length).trim().split(/ +/);
+    const args = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift().toLowerCase();
-    const command     = client.commands.get(commandName);
+    const command = client.commands.get(commandName);
     if (command) {
       try {
         await command.execute(message, args, client);
       } catch (error) {
-        console.error(`[cmd] Error in ${commandName}:`, error);
-        await message.reply('There was an error executing that command.').catch(() => {});
+        console.error(error);
+        await message.reply('There was an error executing that command.');
       }
     }
     return;
@@ -113,7 +96,6 @@ client.on(Events.MessageCreate, async (message) => {
   }
 });
 
+
 // === Login ===
-console.log('[bot] Logging in...');
 await client.login(config.token);
-console.log('[bot] Ready.');

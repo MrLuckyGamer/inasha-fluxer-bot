@@ -14,7 +14,6 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@fluxerjs/core": "latest",
-    "pg": "^8.13.3"
+    "@fluxerjs/core": "latest"
   }
 }
