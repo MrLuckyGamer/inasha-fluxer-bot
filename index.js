@@ -16,19 +16,35 @@ const client = new Client({ intents: 0, suppressIntentWarning: true, waitForGuil
 // === Command Collection ===
 client.commands = new Map();
 
+// === Ready ===
+client.on(Events.ClientReady, () => {
+  console.log(`Bot is online! Logged in as ${client.user?.username}`);
+});
+
 // === Load Commands ===
 async function loadCommands(dir) {
   const files = fs.readdirSync(dir);
+
   for (const file of files) {
     const filePath = path.join(dir, file);
     const stat = fs.statSync(filePath);
+
     if (stat.isDirectory()) {
       await loadCommands(filePath);
     } else if (file.endsWith('.js')) {
-      const mod = await import(pathToFileURL(filePath).href);
-      const command = mod.default ?? mod;
-      if (command?.name) {
-        client.commands.set(command.name, command);
+      try {
+        const mod = await import(pathToFileURL(filePath).href);
+        const command = mod.default ?? mod;
+
+        if (command?.name) {
+          client.commands.set(command.name, command);
+          console.log(`Loaded command: ${command.name}`);
+        } else {
+          console.log(`Skipped file (no command): ${file}`);
+        }
+      } catch (err) {
+        console.error(`Failed to load command file: ${file}`);
+        console.error(err);
       }
     }
   }
@@ -65,10 +81,13 @@ client.on(Events.MessageCreate, async (message) => {
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift().toLowerCase();
     const command = client.commands.get(commandName);
+
     if (command) {
       try {
+        console.log(`⚡ Executing command: ${commandName}`);
         await command.execute(message, args, client);
       } catch (error) {
+        console.error(`Error executing command: ${commandName}`);
         console.error(error);
         await message.reply('There was an error executing that command.');
       }
@@ -97,5 +116,16 @@ client.on(Events.MessageCreate, async (message) => {
 });
 
 
+// === Global Error Logging ===
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled promise rejection:', err);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
+});
+
+
 // === Login ===
+console.log('Attempting to log in...');
 await client.login(config.token);
