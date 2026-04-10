@@ -1,4 +1,4 @@
-import { EmbedBuilder } from '@fluxerjs/core';
+import { EmbedBuilder, PermissionFlags } from '@fluxerjs/core';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -35,7 +35,7 @@ export default {
   async execute(message, args, client) {
     const guild = client.guilds.get(message.guildId);
     const member = await guild?.members.resolve(message.author.id);
-    if (!member?.permissions.has('ManageMessages'))
+    if (!member?.permissions.has(PermissionFlags.ManageMessages))
       return message.reply('You need **Manage Messages** permission to use this command.');
 
     if (!args.length)

@@ -1,3 +1,5 @@
+import { PermissionFlags } from '@fluxerjs/core';
+
 export default {
   name: 'unlock',
   description: 'Unlock the current channel.',
@@ -5,7 +7,7 @@ export default {
   async execute(message, args, client) {
     const guild = client.guilds.get(message.guildId);
     const member = await guild?.members.resolve(message.author.id);
-    if (!member?.permissions.has('ManageChannels'))
+    if (!member?.permissions.has(PermissionFlags.ManageChannels))
       return message.reply('You need **Manage Channels** permission.');
 
     const channel = client.channels.get(message.channelId);

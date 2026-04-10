@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { PermissionFlags } from '@fluxerjs/core';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FILE = path.join(__dirname, '../data/serverstats/serverstats.json');
@@ -50,7 +51,7 @@ export default {
     if (!guild) return;
 
     const member = await guild.members.resolve(message.author.id);
-    if (!member?.permissions.has('ManageGuild'))
+    if (!member?.permissions.has(PermissionFlags.ManageGuild))
       return message.reply('You need **Manage Server** permission to use this command.');
 
     const data = loadStats();

@@ -1,3 +1,5 @@
+import { PermissionFlags } from '@fluxerjs/core';
+
 export default {
   name: 'purge',
   description: 'Delete a number of messages from the channel.',
@@ -5,7 +7,7 @@ export default {
   async execute(message, args, client) {
     const guild = client.guilds.get(message.guildId);
     const member = await guild?.members.resolve(message.author.id);
-    if (!member?.permissions.has('ManageMessages'))
+    if (!member?.permissions.has(PermissionFlags.ManageMessages))
       return message.reply("You don't have permission to manage messages.");
 
     const amount = parseInt(args[0]);

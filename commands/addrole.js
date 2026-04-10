@@ -1,4 +1,4 @@
-import { EmbedBuilder } from '@fluxerjs/core';
+import { EmbedBuilder, PermissionFlags } from '@fluxerjs/core';
 
 export default {
   name: 'addrole',
@@ -12,11 +12,11 @@ export default {
 
     const err = (desc) => message.channel.send({ embeds: [new EmbedBuilder().setColor('Red').setDescription(desc)] });
 
-    if (!invoker?.permissions.has('ManageRoles'))
+    if (!invoker?.permissions.has(PermissionFlags.ManageRoles))
       return err("You don't have permission to manage roles!");
 
     const botMember = await guild.members.fetchMe?.().catch(() => null);
-    if (botMember && !botMember.permissions.has('ManageRoles'))
+    if (botMember && !botMember.permissions.has(PermissionFlags.ManageRoles))
       return err("I don't have permission to manage roles!");
 
     const target = message.mentions?.[0];

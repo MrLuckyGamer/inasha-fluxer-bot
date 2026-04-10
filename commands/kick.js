@@ -1,3 +1,5 @@
+import { PermissionFlags } from '@fluxerjs/core';
+
 export default {
   name: 'kick',
   description: 'Kick a user from the server.',
@@ -7,7 +9,7 @@ export default {
     if (!guild) return;
 
     const member = await guild.members.resolve(message.author.id);
-    if (!member?.permissions.has('KickMembers'))
+    if (!member?.permissions.has(PermissionFlags.KickMembers))
       return message.reply("You don't have permission to kick members.");
 
     const target = message.mentions?.[0];

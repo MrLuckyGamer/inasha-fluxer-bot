@@ -1,3 +1,5 @@
+import { PermissionFlags } from '@fluxerjs/core';
+
 export default {
   name: 'ban',
   description: 'Ban a user from the server.',
@@ -7,7 +9,7 @@ export default {
     if (!guild) return;
 
     const member = await guild.members.resolve(message.author.id);
-    if (!member?.permissions.has('BanMembers'))
+    if (!member?.permissions.has(PermissionFlags.BanMembers))
       return message.reply("You don't have permission to ban members.");
 
     const target = message.mentions?.[0];
