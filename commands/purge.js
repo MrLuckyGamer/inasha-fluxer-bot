@@ -1,4 +1,5 @@
 import { PermissionFlags } from '@fluxerjs/core';
+import { Routes } from '@fluxerjs/types';
 
 export default {
   name: 'purge',
@@ -18,9 +19,11 @@ export default {
     if (!channel) return;
 
     try {
-      // Fetch recent messages then bulk delete
-      const msgs = await channel.messages.fetch(amount + 1);
-      const ids = [...msgs.values()].map(m => m.id).slice(0, amount);
+      // Fetch recent messages via REST (limit includes the command message itself)
+      const data = await client.rest.get(
+        `${Routes.channelMessages(message.channelId)}?limit=${amount + 1}`
+      );
+      const ids = data.map(m => m.id).slice(0, amount);
       await channel.bulkDeleteMessages(ids);
 
       const notice = await channel.send({ content: `Deleted **${ids.length}** messages.` });
