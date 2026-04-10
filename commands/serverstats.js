@@ -79,6 +79,14 @@ export default {
       const botsChannel     = await makeVoice('🤖 Bots: 0');
       const channelsChannel = await makeVoice('💬 Channels: 0');
 
+      // Move the category (and its children) to the very top of the server
+      await guild.setChannelPositions([
+        { id: category.id,       position: 0 },
+        { id: usersChannel.id,   position: 0, parent_id: category.id },
+        { id: botsChannel.id,    position: 1, parent_id: category.id },
+        { id: channelsChannel.id, position: 2, parent_id: category.id },
+      ]).catch(() => {});
+
       data[guild.id] = {
         category: category.id,
         users:    usersChannel.id,
