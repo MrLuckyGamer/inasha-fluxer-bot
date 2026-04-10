@@ -37,15 +37,6 @@ async function loadCommands(dir) {
 const commandsPath = path.join(__dirname, 'commands');
 await loadCommands(commandsPath);
 
-// === Ready Event ===
-client.on(Events.Ready, async () => {
-  const totalUsers = [...client.guilds.values()].reduce((sum, g) => sum + (g.memberCount ?? 0), 0);
-  console.log('==========================');
-  console.log(`Logged in as ${client.user.username}`);
-  console.log(`Serving in ${client.guilds.size} servers`);
-  console.log(`Watching over ${totalUsers} users`);
-  console.log('==========================');
-});
 
 // === Guild member join/leave for serverstats ===
 client.on(Events.GuildMemberAdd, async (member) => {
@@ -105,21 +96,6 @@ client.on(Events.MessageCreate, async (message) => {
   }
 });
 
-// === Guild join/leave logging ===
-client.on(Events.GuildCreate, (guild) => {
-  console.log('====================================');
-  console.log(`Added to: ${guild.name} (ID: ${guild.id})`);
-  console.log(`Members: ${guild.memberCount ?? 'unknown'}`);
-  console.log(`Total Servers: ${client.guilds.size}`);
-  console.log('====================================');
-});
-
-client.on(Events.GuildDelete, (guild) => {
-  console.log('====================================');
-  console.log(`Removed from: ${guild.name} (ID: ${guild.id})`);
-  console.log(`Total Servers: ${client.guilds.size}`);
-  console.log('====================================');
-});
 
 // === Login ===
 await client.login(config.token);
