@@ -3,13 +3,17 @@ import { pathToFileURL } from 'url';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { initDb } from './db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const config = {
-  token: process.env.FLUXER_BOT_TOKEN,
-  prefix: process.env.prefix || 'i>',
+  token:  process.env.FLUXER_BOT_TOKEN,
+  prefix: process.env.PREFIX || 'i>',
 };
+
+// Initialise PostgreSQL tables before starting the bot
+await initDb();
 
 const client = new Client({ intents: 0, suppressIntentWarning: true, waitForGuilds: true });
 
@@ -57,14 +61,14 @@ client.on(Events.GuildMemberRemove, async (member) => {
 client.on(Events.MessageCreate, async (message) => {
   if (message.author?.bot) return;
 
-  const lower = (message.content ?? '').toLowerCase();
+  const lower  = (message.content ?? '').toLowerCase();
   const prefix = config.prefix.toLowerCase();
 
   // === Prefix Commands ===
   if (lower.startsWith(prefix)) {
-    const args = message.content.slice(prefix.length).trim().split(/ +/);
+    const args        = message.content.slice(prefix.length).trim().split(/ +/);
     const commandName = args.shift().toLowerCase();
-    const command = client.commands.get(commandName);
+    const command     = client.commands.get(commandName);
     if (command) {
       try {
         await command.execute(message, args, client);

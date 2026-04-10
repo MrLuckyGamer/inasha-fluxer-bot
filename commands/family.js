@@ -1,21 +1,5 @@
 import { EmbedBuilder } from '@fluxerjs/core';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const FILE = path.join(__dirname, '../data/familytree/family.json');
-
-if (!fs.existsSync(path.dirname(FILE))) fs.mkdirSync(path.dirname(FILE), { recursive: true });
-if (!fs.existsSync(FILE)) fs.writeFileSync(FILE, '{}');
-
-function load() { return JSON.parse(fs.readFileSync(FILE)); }
-function save(data) { fs.writeFileSync(FILE, JSON.stringify(data, null, 2)); }
-
-function ensureUser(data, guildId, userId) {
-  if (!data[guildId]) data[guildId] = {};
-  if (!data[guildId][userId]) data[guildId][userId] = { parents: [], children: [] };
-}
+import { pool } from '../db.js';
 
 export default {
   name: 'family',
@@ -24,31 +8,39 @@ export default {
   async execute(message, args) {
     const guildId = message.guildId;
     const userId  = message.author.id;
-    const data    = load();
-
-    ensureUser(data, guildId, userId);
 
     const sub      = args[0]?.toLowerCase();
     const relation = args[1]?.toLowerCase();
     const target   = message.mentions?.[0];
 
-    // Show own family tree
+    // ── SHOW OWN TREE ─────────────────────────────────────────────────────────
     if (!sub) {
-      const family   = data[guildId][userId];
-      const parents  = family.parents.length  ? family.parents.map(id => `<@${id}>`).join('\n')  : 'None';
-      const children = family.children.length ? family.children.map(id => `<@${id}>`).join('\n') : 'None';
+      const { rows } = await pool.query(
+        `SELECT target_id, relation FROM family WHERE guild_id=$1 AND user_id=$2`,
+        [guildId, userId]
+      );
 
-      const siblings = Object.entries(data[guildId])
-        .filter(([uid, info]) => uid !== userId && info.parents.some(p => family.parents.includes(p)))
-        .map(([uid]) => `<@${uid}>`);
-      const siblingsStr = siblings.length ? siblings.join('\n') : 'None';
+      const parents  = rows.filter(r => r.relation === 'parent').map(r => `<@${r.target_id}>`);
+      const children = rows.filter(r => r.relation === 'child').map(r => `<@${r.target_id}>`);
+
+      // Siblings: users who share at least one parent with me
+      const parentIds = rows.filter(r => r.relation === 'parent').map(r => r.target_id);
+      let siblings = [];
+      if (parentIds.length > 0) {
+        const { rows: sibRows } = await pool.query(
+          `SELECT DISTINCT user_id FROM family
+           WHERE guild_id=$1 AND relation='parent' AND target_id=ANY($2) AND user_id<>$3`,
+          [guildId, parentIds, userId]
+        );
+        siblings = sibRows.map(r => `<@${r.user_id}>`);
+      }
 
       const embed = new EmbedBuilder()
         .setTitle(`${message.author.username}'s Family Tree`)
         .addFields(
-          { name: '👨‍👩‍👧 Parents',       value: parents   },
-          { name: '🧑‍🤝‍🧑 Siblings',      value: siblingsStr },
-          { name: '👶 Children',       value: children  },
+          { name: '👨‍👩‍👧 Parents',  value: parents.join('\n')  || 'None' },
+          { name: '🧑‍🤝‍🧑 Siblings', value: siblings.join('\n') || 'None' },
+          { name: '👶 Children',  value: children.join('\n') || 'None' },
         )
         .setColor(6086089)
         .setTimestamp(new Date())
@@ -59,40 +51,47 @@ export default {
 
     if (!target) return message.reply('You must mention a user for this command.');
 
-    ensureUser(data, guildId, target.id);
-    const targetData = data[guildId][target.id];
-    const userData   = data[guildId][userId];
-
+    // ── ADD ───────────────────────────────────────────────────────────────────
     if (sub === 'add') {
-      if (relation === 'parent') {
-        if (!userData.parents.includes(target.id))    userData.parents.push(target.id);
-        if (!targetData.children.includes(userId))    targetData.children.push(userId);
-        save(data);
-        return message.reply(`✅ Added <@${target.id}> as your parent.`);
-      }
-      if (relation === 'child') {
-        if (!userData.children.includes(target.id))   userData.children.push(target.id);
-        if (!targetData.parents.includes(userId))     targetData.parents.push(userId);
-        save(data);
-        return message.reply(`✅ Added <@${target.id}> as your child.`);
-      }
-      return message.reply('Usage: `i>family add parent|child @user`');
+      if (relation !== 'parent' && relation !== 'child')
+        return message.reply('Usage: `i>family add parent|child @user`');
+
+      const inverse = relation === 'parent' ? 'child' : 'parent';
+
+      // Insert both sides (ignore conflicts)
+      await pool.query(
+        `INSERT INTO family (guild_id, user_id, target_id, relation)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT DO NOTHING`,
+        [guildId, userId, target.id, relation]
+      );
+      await pool.query(
+        `INSERT INTO family (guild_id, user_id, target_id, relation)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT DO NOTHING`,
+        [guildId, target.id, userId, inverse]
+      );
+
+      return message.reply(`✅ Added <@${target.id}> as your ${relation}.`);
     }
 
+    // ── REMOVE ────────────────────────────────────────────────────────────────
     if (sub === 'remove') {
-      if (relation === 'parent') {
-        userData.parents     = userData.parents.filter(id => id !== target.id);
-        targetData.children  = targetData.children.filter(id => id !== userId);
-        save(data);
-        return message.reply(`✅ Removed <@${target.id}> as your parent.`);
-      }
-      if (relation === 'child') {
-        userData.children    = userData.children.filter(id => id !== target.id);
-        targetData.parents   = targetData.parents.filter(id => id !== userId);
-        save(data);
-        return message.reply(`✅ Removed <@${target.id}> as your child.`);
-      }
-      return message.reply('Usage: `i>family remove parent|child @user`');
+      if (relation !== 'parent' && relation !== 'child')
+        return message.reply('Usage: `i>family remove parent|child @user`');
+
+      const inverse = relation === 'parent' ? 'child' : 'parent';
+
+      await pool.query(
+        `DELETE FROM family WHERE guild_id=$1 AND user_id=$2 AND target_id=$3 AND relation=$4`,
+        [guildId, userId, target.id, relation]
+      );
+      await pool.query(
+        `DELETE FROM family WHERE guild_id=$1 AND user_id=$2 AND target_id=$3 AND relation=$4`,
+        [guildId, target.id, userId, inverse]
+      );
+
+      return message.reply(`✅ Removed <@${target.id}> as your ${relation}.`);
     }
 
     await message.reply('Invalid command. Usage: `i>family`, `i>family add/remove parent|child @user`');

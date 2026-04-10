@@ -1,10 +1,5 @@
 import { EmbedBuilder } from '@fluxerjs/core';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fishFile = path.join(__dirname, '../data/fish/fish.json');
+import { pool } from '../db.js';
 
 const PAGE_SIZE = 10;
 
@@ -14,41 +9,39 @@ export default {
   category: 'Fun',
   async execute(message, args, client) {
     const guildId = message.guildId;
-    const fishData = fs.existsSync(fishFile) ? JSON.parse(fs.readFileSync(fishFile)) : {};
 
-    if (!fishData[guildId] || Object.keys(fishData[guildId]).length === 0)
+    const { rows } = await pool.query(
+      `SELECT user_id, score
+       FROM fish_scores
+       WHERE guild_id = $1
+       ORDER BY score DESC`,
+      [guildId]
+    );
+
+    if (rows.length === 0)
       return message.channel.send({ content: 'No fish caught yet in this server! 🎣' });
 
-    const guild = client.guilds.get(guildId);
-    const leaderboard = Object.entries(fishData[guildId])
-      .map(([id, points]) => ({ id, points }))
-      .sort((a, b) => b.points - a.points);
+    const guild      = client.guilds.get(guildId);
+    const page       = Math.max(0, (parseInt(args[0]) || 1) - 1);
+    const totalPages = Math.ceil(rows.length / PAGE_SIZE);
+    const currentPage = Math.min(page, totalPages - 1);
 
-    const totalPages = Math.ceil(leaderboard.length / PAGE_SIZE);
-    let currentPage = 0;
+    const start   = currentPage * PAGE_SIZE;
+    const entries = rows.slice(start, start + PAGE_SIZE);
 
-    function buildEmbed(page) {
-      const start   = page * PAGE_SIZE;
-      const entries = leaderboard.slice(start, start + PAGE_SIZE);
-      const desc = entries.map(({ id, points }, i) => {
-        const member = guild?.members?.get?.(id);
-        const name   = member?.user?.username ?? `<@${id}>`;
-        return `**${start + i + 1}. ${name}** — ${points} coins`;
-      }).join('\n');
+    const desc = entries.map(({ user_id, score }, i) => {
+      const member = guild?.members?.get?.(user_id);
+      const name   = member?.user?.username ?? `<@${user_id}>`;
+      return `**${start + i + 1}. ${name}** — ${score} coins`;
+    }).join('\n');
 
-      return new EmbedBuilder()
-        .setTitle(`🎣 Fish Leaderboard — ${guild?.name ?? 'Server'}`)
-        .setDescription(desc || 'No entries on this page.')
-        .setFooter({ text: `Page ${page + 1} of ${totalPages}` })
-        .setColor(6086089)
-        .setTimestamp(new Date());
-    }
+    const embed = new EmbedBuilder()
+      .setTitle(`🎣 Fish Leaderboard — ${guild?.name ?? 'Server'}`)
+      .setDescription(desc || 'No entries on this page.')
+      .setFooter({ text: `Page ${currentPage + 1} of ${totalPages} • Use i>fishlb <page> to navigate` })
+      .setColor(6086089)
+      .setTimestamp(new Date());
 
-    // Send first page (pagination requires button support; Fluxer may differ from discord.js)
-    await message.channel.send({ embeds: [buildEmbed(currentPage)] });
-
-    // Note: Interactive pagination buttons are not implemented here as Fluxer's
-    // component/collector API may differ. Use i>fishlb with args for future pages
-    // if the platform supports button components.
+    await message.channel.send({ embeds: [embed] });
   },
 };
