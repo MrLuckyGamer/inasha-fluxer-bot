@@ -1,5 +1,5 @@
 import { EmbedBuilder } from '@fluxerjs/core';
-import { fetchWaifuGif } from '../waifuFetch.js';
+import { fetchNekosGif } from '../nekosBest.js';
 
 export default {
   name: 'slap',
@@ -10,7 +10,7 @@ export default {
     if (!target) return message.reply('Please mention someone to slap!');
 
     try {
-      const url = await fetchWaifuGif('slap');
+      const url = await fetchNekosGif('slap');
       const embed = new EmbedBuilder()
         .setColor(6086089)
         .setTitle(`${message.author.username} slapped ${target.username}! 👋`)
