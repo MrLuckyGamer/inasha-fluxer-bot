@@ -8,8 +8,12 @@ export default {
   description: 'Show all commands grouped by category.',
   category: 'Utility',
   async execute(message, args, client) {
+    const seen = new Set();
     const categories = {};
     for (const cmd of client.commands.values()) {
+      if (seen.has(cmd.name)) continue;
+      seen.add(cmd.name);
+
       const cat = cmd.category || 'Uncategorized';
       if (!categories[cat]) categories[cat] = [];
       categories[cat].push(`\`${PREFIX}${cmd.name}\` — ${cmd.description}`);
