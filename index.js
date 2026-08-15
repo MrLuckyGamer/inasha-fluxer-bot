@@ -39,6 +39,10 @@ async function loadCommands(dir) {
         if (command?.name) {
           client.commands.set(command.name, command);
           console.log(`📦 Loaded command: ${command.name}`);
+          for (const alias of command.aliases ?? []) {
+            client.commands.set(alias, command);
+            console.log(`   ↳ alias: ${alias}`);
+          }
         } else {
           console.log(`⚠️ Skipped file (no command): ${file}`);
         }
