@@ -9,7 +9,7 @@ export default {
     if (!guild) return;
 
     const invoker = await guild.members.resolve(message.author.id);
-    const err = (desc) => message.channel.send({ embeds: [new EmbedBuilder().setColor('Red').setDescription(desc)] });
+    const err = (desc) => message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(desc)] });
 
     if (!invoker?.permissions.has(PermissionFlags.ManageRoles))
       return err("You don't have permission to manage roles!");
@@ -34,11 +34,11 @@ export default {
     }
 
     if (!targetMember?.roles.has(role.id))
-      return message.channel.send({ embeds: [new EmbedBuilder().setColor('Orange').setDescription(`${target.username} doesn't have the **${role.name}** role!`)] });
+      return message.channel.send({ embeds: [new EmbedBuilder().setColor('#FFA500').setDescription(`${target.username} doesn't have the **${role.name}** role!`)] });
 
     try {
       await targetMember?.roles.remove(role.id);
-      await message.channel.send({ embeds: [new EmbedBuilder().setColor('Green').setDescription(`Successfully removed **${role.name}** from ${target.username}!`).setTimestamp(new Date())] });
+      await message.channel.send({ embeds: [new EmbedBuilder().setColor('#57F287').setDescription(`Successfully removed **${role.name}** from ${target.username}!`).setTimestamp(new Date())] });
     } catch (error) {
       console.error(error);
       await err('An error occurred while trying to remove the role!');

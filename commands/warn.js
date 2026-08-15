@@ -56,7 +56,7 @@ export default {
 
       const embed = new EmbedBuilder()
         .setTitle(`Warnings for ${target.username}`)
-        .setColor('Orange')
+        .setColor('#FFA500')
         .setDescription(
           userWarns.map((w, i) =>
             `**#${i + 1}** — by ${w.moderatorTag}\n**Reason:** ${w.reason}\n*${renderDate(w.date)}*`
@@ -108,7 +108,7 @@ export default {
 
     const embed = new EmbedBuilder()
       .setTitle('User Warned')
-      .setColor('Orange')
+      .setColor('#FFA500')
       .addFields(
         { name: 'User',      value: target.username,          inline: true },
         { name: 'Warned By', value: message.author.username,  inline: true },

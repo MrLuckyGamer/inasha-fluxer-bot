@@ -74,7 +74,7 @@ function embed(title) {
 }
 
 function errorEmbed(desc) {
-  return new EmbedBuilder().setColor('Red').setDescription(desc).setTimestamp(new Date());
+  return new EmbedBuilder().setColor('#ED4245').setDescription(desc).setTimestamp(new Date());
 }
 
 function buildTreeFields(data, guildId, userId, displayName) {
