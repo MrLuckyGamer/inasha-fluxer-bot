@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { PermissionFlags } from '@fluxerjs/core';
+import { PermissionFlags, ChannelType } from '@fluxerjs/core';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FILE = path.join(__dirname, '../data/serverstats/serverstats.json');
@@ -28,7 +28,11 @@ export async function updateStats(guild, client) {
 
     // Fetch channels so guild.channels is populated
     const freshChannels = await guild.fetchChannels().catch(() => null);
-    const channels = freshChannels ? freshChannels.length : guild.channels.size;
+    const channelList = freshChannels ?? [...guild.channels.values()];
+    // Only count text + voice channels — categories (and anything else) are excluded.
+    const channels = channelList.filter(
+      c => c.type === ChannelType.GuildText || c.type === ChannelType.GuildVoice
+    ).length;
 
     // Rename stat channels using .edit({ name }) — Fluxer has no .setName()
     const rename = async (id, name) => {
