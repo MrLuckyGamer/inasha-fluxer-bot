@@ -68,6 +68,7 @@ No exposed port is needed - this bot doesn't run an HTTP server, it just connect
 | `userinfo`     | User information                                 |
 | `invite`       | Get the bot's invite link                        |
 | `serverstats`  | Enable/disable live server stats channels        |
+| `autoresponse` | Enable/disable the cat/dog chat auto-replies     |
 
 ### 🔨 Moderation
 | Command        | Description                                      |
@@ -104,6 +105,44 @@ The bot responds automatically to messages containing:
 - `meow` - cat reply 🐱
 - `woof`, `bark`, `bork`, `ruff`, `arf` - dog reply 🐶
 
+Both are **on by default** and can be toggled per-server with the `autoresponse` command
+(requires **Manage Server** permission):
+
+```
+i>autoresponse            # show status of all auto-responses
+i>autoresponse cat off    # disable cat replies in this server
+i>autoresponse dog on     # re-enable dog replies in this server
+```
+
+`ar` and `autoreply` also work as aliases. To add a new auto-response type (e.g. a
+`fox` reply), add an entry to `src/autoresponses/index.js` - no other code changes needed.
+
+## Project Structure
+
+```
+src/
+├── index.js              # entrypoint - wires everything together and logs in
+├── config.js              # env-based config (token, prefix)
+├── client.js               # Fluxer Client factory
+├── handlers/
+│   ├── loadCommands.js      # recursively loads src/commands/*.js
+│   └── loadEvents.js        # loads src/events/*.js and binds them to the client
+├── events/                # one file per Fluxer gateway event
+│   ├── ready.js
+│   ├── messageCreate.js     # command dispatch + chat auto-responses
+│   ├── guildMemberAdd.js
+│   ├── guildMemberRemove.js
+│   ├── channelCreate.js
+│   └── channelDelete.js
+├── commands/               # one file per `i>` command (see table above)
+├── autoresponses/
+│   ├── index.js             # registry of triggers/replies (cat, dog, ...)
+│   └── store.js             # per-server enable/disable persistence
+└── lib/
+    ├── util.js               # path/URL helpers used by the loaders
+    └── otakuGifs.js           # otakugifs.xyz API client (hug/kiss/slap)
+```
+
 ## Data Storage
 
 All persistent data is stored as JSON files in `./data/`:
@@ -111,6 +150,7 @@ All persistent data is stored as JSON files in `./data/`:
 - `data/familytree/` - family relationships
 - `data/serverstats/` - stat channel IDs
 - `data/warns/` - user warnings
+- `data/autoresponses/` - per-server cat/dog auto-response toggles
 
 ## Key Differences from the Discord Version
 

@@ -4,7 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const WARN_FILE = path.join(__dirname, '../data/warns/warns.json');
+const WARN_FILE = path.join(__dirname, '../../data/warns/warns.json');
 
 if (!fs.existsSync(path.dirname(WARN_FILE))) {
   fs.mkdirSync(path.dirname(WARN_FILE), { recursive: true });

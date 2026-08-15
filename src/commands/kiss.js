@@ -1,5 +1,5 @@
 import { EmbedBuilder } from '@fluxerjs/core';
-import { fetchReactionGif } from '../otakuGifs.js';
+import { fetchReactionGif } from '../lib/otakuGifs.js';
 
 export default {
   name: 'kiss',

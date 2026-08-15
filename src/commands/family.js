@@ -4,7 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const FILE = path.join(__dirname, '../data/familytree/family.json');
+const FILE = path.join(__dirname, '../../data/familytree/family.json');
 const PREFIX = process.env.prefix || 'i>';
 
 const PROPOSAL_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes

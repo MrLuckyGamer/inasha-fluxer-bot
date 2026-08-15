@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import { PermissionFlags, ChannelType } from '@fluxerjs/core';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const FILE = path.join(__dirname, '../data/serverstats/serverstats.json');
+const FILE = path.join(__dirname, '../../data/serverstats/serverstats.json');
 
 if (!fs.existsSync(path.dirname(FILE))) fs.mkdirSync(path.dirname(FILE), { recursive: true });
 if (!fs.existsSync(FILE)) fs.writeFileSync(FILE, '{}');

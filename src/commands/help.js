@@ -1,6 +1,7 @@
 import { EmbedBuilder } from '@fluxerjs/core';
+import { config } from '../config.js';
 
-const PREFIX = process.env.prefix || 'i>';
+const PREFIX = config.prefix;
 
 export default {
   name: 'help',

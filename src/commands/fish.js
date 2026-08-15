@@ -4,8 +4,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fishFile     = path.join(__dirname, '../data/fish/fish.json');
-const cooldownFile = path.join(__dirname, '../data/fish/fishCooldowns.json');
+const fishFile     = path.join(__dirname, '../../data/fish/fish.json');
+const cooldownFile = path.join(__dirname, '../../data/fish/fishCooldowns.json');
 
 function ensureDir(f) {
   const d = path.dirname(f);

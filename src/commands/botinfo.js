@@ -2,7 +2,7 @@ import { EmbedBuilder } from '@fluxerjs/core';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
-const { version: botVersion } = require('../package.json');
+const { version: botVersion } = require('../../package.json');
 
 const PREFIX = process.env.prefix || 'i>';
 
