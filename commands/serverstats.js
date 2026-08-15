@@ -27,8 +27,8 @@ export async function updateStats(guild, client) {
     const users = Math.max(0, allMembers.length - bots);
 
     // Fetch channels so guild.channels is populated
-    await guild.fetchChannels().catch(() => {});
-    const channels = guild.channels.size;
+    const freshChannels = await guild.fetchChannels().catch(() => null);
+    const channels = freshChannels ? freshChannels.length : guild.channels.size;
 
     // Rename stat channels using .edit({ name }) — Fluxer has no .setName()
     const rename = async (id, name) => {
