@@ -10,6 +10,9 @@ async function fetchJson(url, options = {}) {
     const res = await fetch(url, { ...options, signal: controller.signal });
     if (!res.ok) throw new Error(`${url} returned status ${res.status}`);
     return await res.json();
+  } catch (err) {
+    if (err.cause) throw new Error(`${url} failed: ${err.message} (${err.cause.code ?? err.cause.message ?? err.cause})`);
+    throw err;
   } finally {
     clearTimeout(timer);
   }
@@ -35,19 +38,28 @@ async function fetchFromWaifuPics(type) {
   return json.url;
 }
 
+async function fetchFromOtakuGifs(type) {
+  const json = await fetchJson(`https://api.otakugifs.xyz/gif?reaction=${type}&format=gif`, {
+    headers: { 'Accept': 'application/json' },
+  });
+  if (!json?.url) throw new Error('otakugifs.xyz: no URL in response');
+  return json.url;
+}
+
+const PROVIDERS = [
+  { name: 'nekos.best', fetch: fetchFromNekosBest },
+  { name: 'waifu.pics', fetch: fetchFromWaifuPics },
+  { name: 'otakugifs.xyz', fetch: fetchFromOtakuGifs },
+];
+
 export async function fetchNekosGif(type) {
-  try {
-    return await fetchFromNekosBest(type);
-  } catch (primaryErr) {
+  const errors = [];
+  for (const provider of PROVIDERS) {
     try {
-      return await fetchFromWaifuPics(type);
-    } catch (fallbackErr) {
-      const err = new Error(
-        `Failed to fetch a "${type}" GIF from both providers. ` +
-        `nekos.best: ${primaryErr.message} | waifu.pics: ${fallbackErr.message}`
-      );
-      err.cause = { primaryErr, fallbackErr };
-      throw err;
+      return await provider.fetch(type);
+    } catch (err) {
+      errors.push(`${provider.name}: ${err.message}`);
     }
   }
+  throw new Error(`Failed to fetch a "${type}" GIF from all providers.\n${errors.join('\n')}`);
 }
