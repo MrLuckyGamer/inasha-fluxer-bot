@@ -3,6 +3,8 @@
 An all-purpose bot for [Fluxer](https://fluxer.app), ported from the Inasha Discord bot.
 Built with [@fluxerjs/core](https://github.com/fluxerjs/core).
 
+[![license](https://img.shields.io/badge/license-LICENSED-green.svg)](./LICENSE.md)
+
 ## Setup
 
 ```bash
@@ -10,8 +12,7 @@ Built with [@fluxerjs/core](https://github.com/fluxerjs/core).
 npm install
 
 # 2. Configure environment
-cp .env.example .env
-# Edit .env and set your FLUXER_BOT_TOKEN and prefix
+# Create a .env file in the project root (see example below)
 
 # 3. Run the bot
 npm start
@@ -20,12 +21,38 @@ npm start
 npm run dev
 ```
 
+`.env` example:
+
+```env
+FLUXER_BOT_TOKEN=your_fluxer_bot_token_here
+prefix=i>
+```
+
 ## Configuration
 
 | Variable           | Description                        | Default |
 |--------------------|------------------------------------|---------|
-| `FLUXER_BOT_TOKEN` | Your Fluxer bot token              | —       |
+| `FLUXER_BOT_TOKEN` | Your Fluxer bot token              | -       |
 | `prefix`           | Command prefix                     | `i>`    |
+
+## Deployment (Dokploy)
+
+This bot is deployed via [Dokploy](https://dokploy.com). Set the following environment variables in the app's **Environment** tab:
+
+```env
+FLUXER_BOT_TOKEN=your_fluxer_bot_token_here
+prefix=i>
+```
+
+Build/start commands (Nixpacks or Dockerfile-based deploys both work fine, since this is a plain Node app):
+
+| Setting        | Value         |
+|----------------|---------------|
+| Build command  | `npm install` |
+| Start command  | `npm start`   |
+| Node version   | `>=22.13`     |
+
+No exposed port is needed - this bot doesn't run an HTTP server, it just connects out to Fluxer's gateway.
 
 ## Commands
 
@@ -74,16 +101,16 @@ npm run dev
 ## Auto-Responses
 
 The bot responds automatically to messages containing:
-- `meow` — cat reply 🐱
-- `woof`, `bark`, `bork`, `ruff`, `arf` — dog reply 🐶
+- `meow` - cat reply 🐱
+- `woof`, `bark`, `bork`, `ruff`, `arf` - dog reply 🐶
 
 ## Data Storage
 
 All persistent data is stored as JSON files in `./data/`:
-- `data/fish/` — fishing scores and cooldowns
-- `data/familytree/` — family relationships
-- `data/serverstats/` — stat channel IDs
-- `data/warns/` — user warnings
+- `data/fish/` - fishing scores and cooldowns
+- `data/familytree/` - family relationships
+- `data/serverstats/` - stat channel IDs
+- `data/warns/` - user warnings
 
 ## Key Differences from the Discord Version
 
@@ -97,3 +124,8 @@ All persistent data is stored as JSON files in `./data/`:
 | `message.mentions`    | `Collection` with `.first()`   | Plain array of `User` objects   |
 | Ban/Kick              | `member.ban()` / `member.kick()` | `guild.ban(id)` / `guild.kick(id)` |
 | Channel permissions   | `permissionOverwrites.edit()`  | `channel.editPermission()`      |
+
+## License
+
+This project is proprietary software - see [LICENSE.md](./LICENSE.md) for full terms.
+In short: you may use the bot by inviting it to your server or using its commands, but you may not copy, modify, redistribute, or claim ownership of the source code.
