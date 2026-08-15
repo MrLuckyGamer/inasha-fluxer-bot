@@ -71,8 +71,13 @@ export default {
         guild.createChannel({
           type: 2,
           name,
-          parentId: category.id,
-          permissionOverwrites: [{ id: guild.id, type: 0, deny: '1048576' }], // deny Connect
+          parent_id: category.id,
+          permission_overwrites: [{
+            id: guild.id,
+            type: 0,
+            allow: '0',
+            deny: PermissionFlags.Connect.toString(),
+          }],
         });
 
       const usersChannel    = await makeVoice('👥 Users: 0');

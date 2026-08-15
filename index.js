@@ -17,8 +17,26 @@ const client = new Client({ intents: 0, suppressIntentWarning: true, waitForGuil
 client.commands = new Map();
 
 // Ready Event
-client.on('ready', () => {
+client.on('ready', async () => {
   console.log(`✅ Bot is online! Logged in as ${client.user?.username}`);
+
+  // Re-sync stat channels for every guild on startup, in case anything changed (members, channels) while the bot was offline.
+  try {
+    const { updateStats } = await import('./commands/serverstats.js');
+    for (const guild of client.guilds.values()) {
+      await updateStats(guild, client);
+    }
+  } catch (e) { console.error(e); }
+
+  // Safety-net refresh: re-sync periodically in case any event is missed.
+  setInterval(async () => {
+    try {
+      const { updateStats } = await import('./commands/serverstats.js');
+      for (const guild of client.guilds.values()) {
+        await updateStats(guild, client);
+      }
+    } catch (e) { console.error(e); }
+  }, 10 * 60 * 1000); // every 10 minutes
 });
 
 // === Load Commands ===
@@ -69,6 +87,25 @@ client.on(Events.GuildMemberRemove, async (member) => {
   try {
     const { updateStats } = await import('./commands/serverstats.js');
     await updateStats(member.guild, client);
+  } catch (e) { console.error(e); }
+});
+
+// === Channel create/delete (keeps the "Channels" stat in sync) ===
+client.on(Events.ChannelCreate, async (channel) => {
+  try {
+    const guild = channel.guild ?? client.guilds.get(channel.guildId);
+    if (!guild) return;
+    const { updateStats } = await import('./commands/serverstats.js');
+    await updateStats(guild, client);
+  } catch (e) { console.error(e); }
+});
+
+client.on(Events.ChannelDelete, async (channel) => {
+  try {
+    const guild = channel.guild ?? client.guilds.get(channel.guildId);
+    if (!guild) return;
+    const { updateStats } = await import('./commands/serverstats.js');
+    await updateStats(guild, client);
   } catch (e) { console.error(e); }
 });
 
