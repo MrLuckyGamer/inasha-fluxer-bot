@@ -24,4 +24,4 @@ The bot is provided "**as is**", without warranty of any kind.
 
 ## Full License
 
-[![license](https://img.shields.io/badge/license-LICENSED-green.svg)](https://inasha.luckydev.xyz/license.html)
+[Full License](https://inasha.luckydev.xyz/license.html)
