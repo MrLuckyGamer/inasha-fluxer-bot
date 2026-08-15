@@ -11,9 +11,9 @@
   "author": "Lucky",
   "license": "UNLICENSED",
   "engines": {
-    "node": ">=18"
+    "node": ">=22.13"
   },
   "dependencies": {
-    "@fluxerjs/core": "latest"
+    "@fluxerjs/core": "^2.2.0"
   }
 }

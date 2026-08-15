@@ -71,8 +71,8 @@ export default {
         guild.createChannel({
           type: 2,
           name,
-          parent_id: category.id,
-          permission_overwrites: [{ id: guild.id, type: 0, deny: '1048576' }], // deny Connect
+          parentId: category.id,
+          permissionOverwrites: [{ id: guild.id, type: 0, deny: '1048576' }], // deny Connect
         });
 
       const usersChannel    = await makeVoice('👥 Users: 0');
@@ -82,9 +82,9 @@ export default {
       // Move the category (and its children) to the very top of the server
       await guild.setChannelPositions([
         { id: category.id,       position: 0 },
-        { id: usersChannel.id,   position: 0, parent_id: category.id },
-        { id: botsChannel.id,    position: 1, parent_id: category.id },
-        { id: channelsChannel.id, position: 2, parent_id: category.id },
+        { id: usersChannel.id,   position: 0, parentId: category.id },
+        { id: botsChannel.id,    position: 1, parentId: category.id },
+        { id: channelsChannel.id, position: 2, parentId: category.id },
       ]).catch(() => {});
 
       data[guild.id] = {

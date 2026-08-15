@@ -24,7 +24,7 @@ export default {
         `${Routes.channelMessages(message.channelId)}?limit=${amount + 1}`
       );
       const ids = data.map(m => m.id).slice(0, amount);
-      await channel.bulkDeleteMessages(ids);
+      await channel.bulkDelete(ids);
 
       const notice = await channel.send({ content: `Deleted **${ids.length}** messages.` });
       setTimeout(() => notice.delete?.().catch(() => {}), 3000);
