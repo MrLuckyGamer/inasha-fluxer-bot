@@ -1,5 +1,5 @@
 import { EmbedBuilder } from '@fluxerjs/core';
-import { fetchNekosGif } from '../nekosBest.js';
+import { fetchReactionGif } from '../otakuGifs.js';
 
 export default {
   name: 'hug',
@@ -10,7 +10,7 @@ export default {
     if (!target) return message.reply('Please mention someone to hug!');
 
     try {
-      const url = await fetchNekosGif('hug');
+      const url = await fetchReactionGif('hug');
       const embed = new EmbedBuilder()
         .setColor(6086089)
         .setTitle(`${message.author.username} hugged ${target.username}! 🤗`)
