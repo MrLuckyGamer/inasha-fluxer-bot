@@ -1,7 +1,7 @@
 # Inasha Fluxer Bot
 
 An all-purpose bot for [Fluxer](https://fluxer.app), ported from the Inasha Discord bot.
-Built with [@fluxerjs/core](https://github.com/fluxerjs/core).
+Built with [@fluxerjs/core](https://github.com/fluxerjs/core) and TypeScript.
 
 [![license](https://img.shields.io/badge/license-LICENSED-green.svg)](./LICENSE.md)
 
@@ -14,11 +14,17 @@ npm install
 # 2. Configure environment
 # Create a .env file in the project root (see example below)
 
-# 3. Run the bot
+# 3. Build the TypeScript source
+npm run build
+
+# 4. Run the bot
 npm start
 
-# Or with auto-restart during development
+# Or, for development: type-checks and restarts on save (no separate build step needed)
 npm run dev
+
+# To type-check without emitting output
+npm run typecheck
 ```
 
 `.env` example:
@@ -27,6 +33,13 @@ npm run dev
 FLUXER_BOT_TOKEN=your_fluxer_bot_token_here
 prefix=i>
 ```
+
+## Project structure
+
+All source lives in `src/` as `.ts` and compiles to `dist/` (git-ignored; run `npm run build` to
+generate it). `src/types.ts` defines the shared `Command` and `BotEvent` interfaces that every
+file in `src/commands` and `src/events` implements, plus a small module augmentation that types
+`client.commands`.
 
 ## Configuration
 
