@@ -4,11 +4,6 @@ import type { Client } from '@fluxerjs/core';
 import { pathToURL } from '../lib/util.js';
 import type { Command } from '../types.js';
 
-/**
- * Recursively load every command file in `dir` into `client.commands`.
- * Each command file must default-export an object with at least
- * `{ name, execute }`; `aliases` (array) is optional.
- */
 export async function loadCommands(dir: string, client: Client): Promise<void> {
   const files = fs.readdirSync(dir);
 

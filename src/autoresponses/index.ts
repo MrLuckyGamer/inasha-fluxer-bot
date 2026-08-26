@@ -1,8 +1,3 @@
-// Registry of chat-triggered auto-responses.
-// To add a new one: add a key here with `label`, `emoji`, `triggers`, and `replies`.
-// The messageCreate event and the `autoresponse` command both read from this file,
-// and each entry can be toggled on/off per-server via ./store.js.
-
 export interface AutoresponseEntry {
   label: string;
   emoji: string;

@@ -16,8 +16,7 @@ const event: BotEvent<[]> = {
   async execute(client: Client) {
     console.log(`✅ Bot is online! Logged in as ${client.user?.username}`);
 
-    // Re-sync stat channels for every guild on startup, in case anything
-    // changed (members, channels) while the bot was offline.
+    // Re-sync stat channels for every guild on startup, in case anything changed (members, channels) while the bot was offline.
     try {
       await refreshAllStats(client);
     } catch (e) {

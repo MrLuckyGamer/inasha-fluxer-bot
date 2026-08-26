@@ -18,10 +18,6 @@ function save(data: AutoresponseStore): void {
   fs.writeFileSync(FILE, JSON.stringify(data, null, 2));
 }
 
-/**
- * Whether `type` (e.g. 'cat' / 'dog') is enabled for `guildId`.
- * Auto-responses are enabled by default until explicitly disabled.
- */
 export function isEnabled(guildId: string, type: string): boolean {
   const data = load();
   return data[guildId]?.[type] !== false;

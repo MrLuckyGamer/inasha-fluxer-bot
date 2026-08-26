@@ -4,10 +4,6 @@ import type { Client } from '@fluxerjs/core';
 import { pathToURL } from '../lib/util.js';
 import type { BotEvent } from '../types.js';
 
-/**
- * Load every event file in `dir` and bind it to `client`.
- * Each event file must default-export `{ name, once?, execute(client, ...args) }`.
- */
 export async function loadEvents(dir: string, client: Client): Promise<void> {
   const files = fs
     .readdirSync(dir)
