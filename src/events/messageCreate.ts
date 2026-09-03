@@ -25,7 +25,11 @@ const event: BotEvent<[message: Message]> = {
         } catch (error) {
           console.error(`❌ Error executing command: ${commandName}`);
           console.error(error);
-          await message.reply('There was an error executing that command.');
+          try {
+            await message.reply('There was an error executing that command.');
+          } catch (replyError) {
+            console.error('❌ Also failed to send the error reply:', replyError);
+          }
         }
       }
       return;
