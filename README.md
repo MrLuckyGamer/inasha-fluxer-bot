@@ -82,6 +82,7 @@ No exposed port is needed - this bot doesn't run an HTTP server, it just connect
 | `invite`       | Get the bot's invite link                        |
 | `serverstats`  | Enable/disable live server stats channels        |
 | `autoresponse` | Enable/disable the cat/dog chat auto-replies     |
+| `counting`     | Enable/disable the counting game in a channel    |
 
 ### 🔨 Moderation
 | Command        | Description                                      |
@@ -130,6 +131,30 @@ i>autoresponse dog on     # re-enable dog replies in this server
 `ar` and `autoreply` also work as aliases. To add a new auto-response type (e.g. a
 `fox` reply), add an entry to `src/autoresponses/index.js` - no other code changes needed.
 
+## Counting Game
+
+Turns a channel into a collaborative counting game: members count upward one message at a
+time, and the bot reacts to every attempt.
+
+- ✅ reaction + the count advances, when a message is the correct next number.
+- ❌ reaction + a reply naming the expected number, when it's wrong - and the count resets
+  back to **1**.
+- Numbers can be typed as digits (`42`) or spelled out in English (`forty two`,
+  `forty-two`, `one hundred and one`, `two thousand twenty four`, ...). Any other message in
+  the channel (regular chat, emoji, etc.) is ignored.
+
+Off by default; toggle per-server with the `counting` command (requires **Manage Server**
+permission):
+
+```
+i>counting enable     # turn on counting in the current channel (starts at 1)
+i>counting status      # show whether it's on, which channel, and the next number
+i>counting disable     # turn it off
+```
+
+`count` also works as an alias. Only one counting channel is active per server at a time -
+running `counting enable` in a different channel moves the game (and resets the count) there.
+
 ## Project Structure
 
 ```
@@ -142,7 +167,7 @@ src/
 │   └── loadEvents.js        # loads src/events/*.js and binds them to the client
 ├── events/                # one file per Fluxer gateway event
 │   ├── ready.js
-│   ├── messageCreate.js     # command dispatch + chat auto-responses
+│   ├── messageCreate.js     # command dispatch + counting game + chat auto-responses
 │   ├── guildMemberAdd.js
 │   ├── guildMemberRemove.js
 │   ├── channelCreate.js
@@ -151,6 +176,9 @@ src/
 ├── autoresponses/
 │   ├── index.js             # registry of triggers/replies (cat, dog, ...)
 │   └── store.js             # per-server enable/disable persistence
+├── counting/
+│   ├── store.js             # per-server counting channel + count persistence
+│   └── parseNumber.js       # parses digits and spelled-out numbers ("forty two")
 └── lib/
     ├── util.js               # path/URL helpers used by the loaders
     └── otakuGifs.js           # otakugifs.xyz API client (hug/kiss/slap)
@@ -164,6 +192,7 @@ All persistent data is stored as JSON files in `./data/`:
 - `data/serverstats/` - stat channel IDs
 - `data/warns/` - user warnings
 - `data/autoresponses/` - per-server cat/dog auto-response toggles
+- `data/counting/` - per-server counting channel + current count
 
 ## Key Differences from the Discord Version
 
