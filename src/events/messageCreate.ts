@@ -2,6 +2,7 @@ import { Events, type Client, type Message } from '@fluxerjs/core';
 import { config } from '../config.js';
 import { autoresponses } from '../autoresponses/index.js';
 import { isEnabled } from '../autoresponses/store.js';
+import { getCounting, setCount } from '../counting/store.js';
 import type { BotEvent } from '../types.js';
 
 const event: BotEvent<[message: Message]> = {
@@ -33,6 +34,46 @@ const event: BotEvent<[message: Message]> = {
         }
       }
       return;
+    }
+
+    // ── Counting channel (toggleable per server) ────────────────────────────
+    if (message.guildId) {
+      const counting = getCounting(message.guildId);
+      if (counting && message.channelId === counting.channelId) {
+        const trimmed = (message.content ?? '').trim();
+
+        // Only plain positive integers count as an attempt; anything else
+        // (chat, emoji, etc.) in the channel is left alone.
+        if (/^\d+$/.test(trimmed)) {
+          const parsed = Number(trimmed);
+          const expected = counting.count + 1;
+
+          if (parsed === expected) {
+            setCount(message.guildId, expected, message.author.id);
+            try {
+              await message.react('✅');
+            } catch (err) {
+              console.error('❌ Failed to react to counting message:', err);
+            }
+          } else {
+            setCount(message.guildId, 0, null);
+            try {
+              await message.react('❌');
+            } catch (err) {
+              console.error('❌ Failed to react to counting message:', err);
+            }
+            try {
+              await message.reply(
+                `❌ Wrong number! I was expecting **${expected}**. The count has been reset — start again from **1**.`
+              );
+            } catch (err) {
+              console.error('❌ Failed to send counting reset reply:', err);
+            }
+          }
+        }
+
+        return;
+      }
     }
 
     // ── Chat auto-responses (cat/dog etc., toggleable per server) ──────────
