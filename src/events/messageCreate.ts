@@ -3,6 +3,7 @@ import { config } from '../config.js';
 import { autoresponses } from '../autoresponses/index.js';
 import { isEnabled } from '../autoresponses/store.js';
 import { getCounting, setCount } from '../counting/store.js';
+import { parseCountingNumber } from '../counting/parseNumber.js';
 import type { BotEvent } from '../types.js';
 
 const event: BotEvent<[message: Message]> = {
@@ -42,10 +43,11 @@ const event: BotEvent<[message: Message]> = {
       if (counting && message.channelId === counting.channelId) {
         const trimmed = (message.content ?? '').trim();
 
-        // Only plain positive integers count as an attempt; anything else
-        // (chat, emoji, etc.) in the channel is left alone.
-        if (/^\d+$/.test(trimmed)) {
-          const parsed = Number(trimmed);
+        // Accepts plain digits ("42") and spelled-out numbers ("forty two").
+        // Anything else (chat, emoji, etc.) in the channel is left alone.
+        const parsed = parseCountingNumber(trimmed);
+
+        if (parsed !== null) {
           const expected = counting.count + 1;
 
           if (parsed === expected) {
