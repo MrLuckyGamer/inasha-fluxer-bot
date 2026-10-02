@@ -1,6 +1,6 @@
 import { Events, type Client, type Message } from '@fluxerjs/core';
 import { config } from '../config.js';
-import { autoresponses } from '../autoresponses/index.js';
+import { autoresponses, matchesTrigger } from '../autoresponses/index.js';
 import { isEnabled } from '../autoresponses/store.js';
 import { getCounting, setCount } from '../counting/store.js';
 import { parseCountingNumber } from '../counting/parseNumber.js';
@@ -80,7 +80,7 @@ const event: BotEvent<[message: Message]> = {
 
     // ── Chat auto-responses (cat/dog etc., toggleable per server) ──────────
     for (const [type, entry] of Object.entries(autoresponses)) {
-      if (!entry.triggers.some((word) => lower.includes(word))) continue;
+      if (!matchesTrigger(lower, entry.triggers)) continue;
       if (!message.guildId || !isEnabled(message.guildId, type)) return;
 
       const replies = entry.replies;

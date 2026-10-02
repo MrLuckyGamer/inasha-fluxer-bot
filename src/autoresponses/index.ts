@@ -35,3 +35,11 @@ export const autoresponses: Record<string, AutoresponseEntry> = {
     ],
   },
 };
+
+const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+export function matchesTrigger(text: string, triggers: string[]): boolean {
+  return triggers.some((word) =>
+    new RegExp(`(?<![a-z0-9])${escapeRegex(word)}(?![a-z0-9])`, 'i').test(text),
+  );
+}
